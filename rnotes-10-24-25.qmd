@@ -1,0 +1,76 @@
+---
+title: "Class Notes Template"
+author: "Preye Indiamaowei"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+```
+
+## Lists
+
+A list is a generalization of the data frame.
+
+```{r}
+my_list <- list(nums = 1:5,
+                vars = c("area",
+                         "peri",
+                         "shape",
+                         "perm"),
+                data = rock)
+
+str(my_list) # see the structure of the object
+```
+
+Extract elements using `$` or double brackets.
+
+```{r}
+my_list$nums
+my_list[["vars"]]
+```
+## Repetition
+
+Loops exist in R, but we don't use them. Instead, we usually can just apply a specified function to every element of a vector, data frame, or list.
+
+Example of how this can get complicated:
+```{r}
+typeof(my_list)
+```
+
+I'd like to apply `typeof()` to every element of the list. Gard reccomends `map` and its friends.
+```{r}
+map(my_list, typeof)
+```
+This always gives back a list. We can specify the sort of object we want back by using a related function.
+```{r}
+map_chr(my_list, typeof)
+```
+
+General rule: If you need to so the same thing 3 times, consider automating it.
+
+What if the thing we need to automate isn't just a function like `typeof()`? For instance, suppose I want to keep the four lowest values of each column of the `rock` set?
+
+```{r}
+glimpse(rock)
+```
+
+## Writing Functions
+
+A function to keep the four smallest values of a numerical vector:
+```{r}
+keep_smallest <- function(nums){
+  sort(nums)[1:4]
+}
+
+keep_smallest(rock$area)
+
+map(rock, keep_smallest)
+```
+
+** Functions are first-class objects. We create them using `function()`, a constructor.
+

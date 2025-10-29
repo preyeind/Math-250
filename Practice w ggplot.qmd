@@ -1,0 +1,87 @@
+---
+title: "Practice with ggplot"
+author: "Preye Indiamaowei"
+date: "8 September 2025"
+format: html
+embed-resources: true
+
+---
+
+## Problem 1
+
+We will be working with the `attrition` data set from the `modeldata` package. Let's take a look at the data set. 
+```{r}
+#| message: false
+
+library(tidyverse)
+library(modeldata)
+glimpse(attrition)
+```
+Now let's use the `ggplot()` function to create a box plot from the data set.
+
+```{r}
+ggplot(attrition, aes(x = MonthlyIncome,
+                      y = Education,
+                      fill = Education)) +
+  geom_boxplot() +
+  labs(x = " Monthly Income",
+       y = "Education",
+       title = "Learn to Earn") +
+  scale_fill_brewer(palette = "Dark2")
+```
+Note: I couldn't figure out how to get the boxes to be different colors.
+
+## Problem 2
+
+Next, we will create a bar chart to look at the `Age` variable.
+
+```{r}
+ggplot(attrition, aes(x = Age)) +
+  geom_bar(color = "darkgreen",
+           fill = "lightgreen") +
+  theme_minimal()
+```
+
+## Problem 3
+
+Next, we will generate an accessible bar chart stressing the different levels of job satisfaction, while also showing the relative attrition rates within each group.
+
+```{r}
+ggplot(attrition, aes(x = JobSatisfaction,
+                      fill = Attrition)) +
+  geom_bar() +
+  labs(x = "Job Satisfaction",
+       y = "Frequency",
+       title = "Attrition and Job Satisfaction") +
+  scale_fill_brewer(palette = "Dark2") +
+  theme_minimal()
+```
+
+## Problem 4
+
+Next, we will generate an accessible bar chart clearly comparing the different attrition rates for various levels of job satisfaction.
+
+```{r}
+ggplot(attrition, aes(fill = JobSatisfaction,
+                      x = Attrition)) +
+  geom_bar() +
+  scale_fill_brewer(palette = "Dark2") +
+  theme_minimal()
+```
+
+## Problem 5
+
+Finally, we will create a bar chart that displays the monthly income of different education fields.
+
+```{r}
+ggplot(attrition, aes(x = MonthlyIncome,
+                      fill = EducationField)) +
+  geom_histogram()+
+  facet_wrap(~EducationField) +
+  labs(title = "Income by Field",
+       x = "Monthly Income",
+       caption = "Source: IBM Watson Analytics Lab") +
+  scale_fill_brewer(palette = "Dark2") +
+  theme_minimal()
+```
+

@@ -1,0 +1,66 @@
+---
+title: "rnotes-9-5-25"
+format: html
+editor: visual
+embed-resources: true
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed). 'include: false' to run the code but not show anything, 'eval: false' to show but not run code
+
+```{r}
+#| eval: false
+library(tidyverse)
+```
+
+Let's actually load 'tidyverse' but silence the message.
+
+```{r}
+#| message: false
+
+library(tidyverse)
+glimpse(penguins)
+
+```
+
+## Boxplots
+
+Let's get a boxplot showing 'bill_len' by 'species'.
+
+```{r}
+ggplot(penguins, aes(x = bill_len, 
+                     y = species)) +
+  geom_boxplot()
+```
+
+By the way, *never* include interactive commands like 'view' and 'install.packages' in a Quarto document.
+
+Let's try and silence that warning.
+```{r}
+#| warning: false
+
+
+ggplot(penguins, aes(y = bill_len, 
+                     x = species)) +
+  geom_boxplot()
+```
+
+Here, two observations are missing. We should investigate.

@@ -1,0 +1,187 @@
+---
+title: "Wrangling Practice"
+author: "Preye Indiamaowei"
+format: html
+embed-resources: true
+---
+
+Problems 1-3 refer to the `astronauts` data set, which includes information about all humans that had traveled to space as of 2019.
+
+```{r}
+#| label: setup
+#| message: false
+#| include: false
+
+library(tidyverse)
+library(readxl)
+
+astronauts <- read_excel("astronauts.xlsx")
+
+```
+
+```{r}
+glimpse(astronauts)
+```
+
+# Problem 1
+Obtain rankings of the five astronauts with the most total EVA (extra-vehicular activity) hours. Generate an attractive horizontal bar chart of the results
+```{r}
+#| include: false
+# wrong way, not final answer
+astronauts_sm1a <- astronauts %>% 
+  select(number,
+         name, 
+         eva_hrs_mission) %>% 
+  slice_max(order_by = eva_hrs_mission,
+              n = 5)
+
+  gt::gt(astronauts_sm1a)
+```
+
+```{r}
+astronauts_sm1 <- astronauts %>% 
+  group_by(name) %>% 
+  summarise(total_eva = sum(eva_hrs_mission))
+
+astronauts_sm1b <- astronauts_sm1 %>% 
+  slice_max(order_by = total_eva,
+            n = 5) 
+  gt::gt(astronauts_sm1b)
+```
+
+```{r}
+#| fig-alt: A bar chart displaying the five astronauts with the highest extra-vehicular activity hours.
+
+astronauts_sm1b %>% 
+    ggplot(aes(y = fct_reorder(name, total_eva),
+               x = total_eva,
+           fill = name)) +
+    geom_col(show.legend = FALSE) +
+    labs(y = "Name",
+         x = "Total EVA Hours ",
+         title = "Top 5 EVA Hours") +
+    scale_fill_brewer(palette = "Dark2") +
+    theme_minimal()
+```
+
+# Problem 2
+What are the top five occupations of astronauts? Compute the `minimum`, `median`, and `maximum` ages of astronauts in each of these roles. Also include the total number of times astronauts have had these occupations.
+
+```{r}
+#| include: false
+# wrong again!
+
+astronauts %>%
+  group_by(occupation) %>%
+    summarise(frequency = n()) %>%
+      slice_max(order_by = frequency, n = 5)
+```
+
+
+```{r}
+#| include: false
+# wrong part 2!
+
+
+ast_occ <- astronauts %>% 
+  group_by(occupation) %>% 
+  filter(occupation == "MSP" |
+           occupation == "commander" |
+           occupation == "pilot" |
+           occupation == "flight engineer" |
+           occupation == "PSP") %>% 
+  summarise(min_age = min(2025 - year_of_birth),
+            max_age = max(2025 - year_of_birth),
+            med_age = median(2025 - year_of_birth))
+```
+
+```{r}
+ast_occ <- astronauts %>% 
+  group_by(occupation) %>% 
+  summarise(min_age = min(year_of_mission - year_of_birth),
+            max_age = max(year_of_mission - year_of_birth),
+            med_age = median(year_of_mission - year_of_birth),
+            count = n()) %>% 
+  slice_max(order_by = count,
+            n = 5)
+gt::gt(ast_occ)
+```
+
+# Problem 3
+Are civilians less likely to put in EVA hours than military members? Has this changed over time? Obtain a single data frame showing total EVA hours for each year and military/civilian status. Rather than printing the entire thing in your document, create a neat table showing the first 10 rows only. Use the complete table to generate a relevant line plot.
+
+```{r}
+#| message: false
+
+ast_mil_civ <- astronauts %>% 
+  group_by(year_of_mission,
+           military_civilian) %>% 
+  summarise(total_eva = sum(eva_hrs_mission))
+
+ast_mil_civ %>% 
+  head(n = 10) %>% 
+  gt::gt()
+```
+
+```{r}
+#| fig-alt: A line plot displaying change in extra-vehicular activity hours over time for military and civilian astronauts.
+#| message: false
+
+astronauts %>% 
+  ggplot(aes(y = eva_hrs_mission,
+             x = year_of_mission,
+             color = military_civilian)) +
+  geom_line() +
+  labs(x = "Year of Mission",
+       y = "EVA Hours",
+       title = "Military vs Civilian EVA Hours over Time") +
+  scale_color_brewer(palette = "Dark2") +
+  theme_minimal()
+```
+
+# Problem 4
+Revisit the `scooby` data set. Explore the relationship between setting_terrain and one or more other variables in the set until you find something that might be interesting. Include a plot, a numerical summary (like a table), and a short paragraph explaining your findings.
+
+```{r}
+scooby <- read_excel("scooby.xlsx")
+glimpse(scooby)
+```
+
+```{r}
+scooby %>% 
+  select(title, 
+         setting_terrain,
+         monster_type,
+         monster_subtype)
+```
+
+```{r}
+scooby_setting_imdb <- scooby %>% 
+  group_by(setting_terrain) %>% 
+  summarise(avg_imdb_rating = mean(imdb, na.rm = TRUE))
+
+gt::gt(scooby_setting_imdb)
+```
+
+```{r}
+scooby %>% 
+  group_by(occupation) %>% 
+  summarise()
+```
+
+```{r}
+#| fig-alt: A plot
+#| warning: false
+
+scooby %>% 
+  group_by(setting_terrain) %>% 
+  ggplot(aes(y = setting_terrain,
+             x = sum(suspects_amount),
+             fill = setting_terrain)) +
+  geom_col(position = "fill",
+           show.legend = FALSE) +
+  scale_fill_brewer(palette = "Dark2") +
+  theme_minimal()
+```
+
+

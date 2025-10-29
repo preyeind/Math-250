@@ -1,0 +1,42 @@
+---
+title: "R Notes 9/17/25"
+author: "Preye Indiamaowei"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+```
+
+## Filtering `NA`s
+
+The `penguins` data set includes some missing values which can complicte things. How many `bill_len` values are missing?
+
+```{r}
+is.na(penguins$bill_len)
+sum(is.na(penguins$bill_len))
+mean(is.na(penguins$bill_len))
+```
+
+About 0.6% of the observations are missing. Two total. Let's filter the data set to just keep these. The obvious thing doesn't work.
+
+```{r}
+penguins %>%
+  filter(bill_len == NA) # no matches
+
+penguins %>%
+  filter(is.na(bill_len))
+
+```
+
+We keep non-missing values like so:
+
+```{r}
+penguins %>%
+  filter(!is.na(bill_len))
+
+```

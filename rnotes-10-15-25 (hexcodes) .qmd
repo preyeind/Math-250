@@ -1,0 +1,29 @@
+---
+title: "R Notes 10/15/25"
+author: "Preye Indiamaowei"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+color_survey <- read.csv("color_survey.csv")
+```
+
+The first row in the `color_survey` set has color `#4864af`. What does this mean??
+
+How much red, green, and blue is in a color. We read this in pairs, giving us red, green, and blue components. Here, 48 red. These values are in *hexidecimal*, or just *hex*, which means they're base 16.
+
+The hex number 48 means 4 sixteens and 8 ones. This is 16*4 + 8 = 72.
+
+What about the blue component, af? In hex, a is 10, b is 11, etc., so af is 10 sixteens and 15 ones. So, 16*10 + 15 = 175.
+
+If you put the color code in a code chunk, R studio will show it to you.
+
+```{r}
+"#4864af"
+```
+

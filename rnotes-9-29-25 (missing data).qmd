@@ -1,0 +1,57 @@
+---
+title: "R Notes 9/29/25"
+author: "Preye Indiamaowei"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+library(dplyr)
+```
+
+## Missing Data
+
+Broadly speaking, there are three kinds of missing data.
+
+1) **Missing completely at random**, where a random sample of observations are deleted or missing. This is how the `slice_sample` function works. When doing plots or models, R and other languages assume this type.
+
+2) **Missing at random**, where there are correlations with other variables, but still randominity in the missingness. It's sometimes possible to *impute* the missing values in this situation.
+
+3) **Missing not at random**, where there are real-world reasons for missing data that may not be apparent from the spreadsheet.
+
+```{r}
+glimpse(msleep)
+```
+
+Let's start by looking at conservation status. We can learn about the abbreviations used on the internet. What about the `Na`s for this variable? Let's start by isolating these observations.
+
+```{r}
+conserv_na <- msleep %>% 
+  filter(is.na(conservation))
+
+gt::gt(conserv_na)
+```
+
+Some googling tells us that these species weren't emdagered at the time the set was made. These `NA`s aren't ramndom-- they need something. We could replace these `NA`s for instance, with "not endangered" or something. A useful command is `tidyr::replace_`
+
+What about `sleep_rem`? Is the missingness of this variable related to other variables in the set? We might try to answer this by making some plots where missingness is a variable. Let's just check vs `vore`. Ideally you should check vs every variable of interest in your analysis.
+
+```{r}
+#| fig-alt: A bar chart showing missingness in rem sleep broken down by vore. Carnivores are more likely to be missing, omnivores less.
+
+
+msleep <- msleep %>% 
+  mutate("sleep_rem_na" = is.na(sleep_rem))
+
+msleep %>% 
+  ggplot(aes(x = vore,
+         fill = sleep_rem_na))+
+  geom_bar(position = "fill")
+
+```
+
+If we drop observations with mssing `sleep_rem`, we'll disproportionately be 

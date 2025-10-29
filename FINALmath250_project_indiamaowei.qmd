@@ -1,0 +1,177 @@
+---
+title: "It's All Green to Me: Looking at Colorblindness and Color Naming"
+author: "Preye Indiamaowei"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+#| echo: false
+
+library(tidyverse)
+library(gt)
+
+color_survey <- read.csv("color_survey.csv")
+```
+
+Color is one of the most mundane, yet fascinating aspects of our world. While color is a scientific reality made up of particles and wavelengths, color as a concept is a uniquely human one, as color fundamentally shapes our perception of the world. We not only use color to interact with and understand the physical world, we also use it to create meaning and assign various connotations and social understandings to certain colors[^1]. Throughout human history, colors have been widely understood to be visual representations of concepts– red symbolizes love and passion and danger, yellow symbolizes joy and warmth and prosperity, and so on and so forth.
+
+[^1]: [Color Meanings Explorer: The Interactive Guide to Symbolism and Impact \| Color Meanings](https://www.color-meanings.com/color-meanings-explorer/)
+
+With that being said, not all humans perceive color the same way (of course). About 8 percent of males and 0.5 percent of females worldwide are colorblind– that's around 300 million people. But what does it mean really to be colorblind? According to the National Eye Institute[^2] (one of the divisions of the National Institute of Health) , colorblindness, also known as color vision deficiency, is a genetic condition in which one or more of the color cone cells are absent, not working, or detect a different color than normal. Put simply, people who are color blind have a harder time differentiating between certain colors. There are multiple different kinds of color vision deficiency. The most common kind is red-green deficiency, but there is also blue-yellow deficiency, and in very rare cases, complete color vision deficiency– which is exactly what it sounds like.
+
+[^2]: [Color Blindness \| National Eye Institute](https://www.nei.nih.gov/learn-about-eye-health/eye-conditions-and-diseases/color-blindness)
+
+This brings me to the main theme of this project. Throughout this report, I will be exploring the results of the XKCD color survey through one central question: did colorblindness affect how users engaged with the survey and the kind of responses they gave? Are there significant differences?
+
+To begin exploring this question, I started by creating a smaller version of the data set-- `colorblind_survey`-- that only included users that identified themselves as colorblind or not colorblind. This is the data set I used throughout this report.
+
+```{r}
+colorblind_survey <- color_survey %>% 
+  filter(!is.na(colorblind)) 
+```
+
+## Does Colorblindness Affect Spam Responses?
+
+I was particularly curious about whether there was a correlation between spam responses and color blindness. A large amount of the responses in the XKCD survey were spam responses. Because the survey was so long, many users grew tired of endlessly naming colors and gave weird/silly/nonsense responses as opposed to simply responding with color names. In keeping with the central theme of this report, I decided to explore what kinds of spam responses were given by colorblind users and how they compared to spam responses from non-colorblind users.
+
+I started by first subsetting `colorblind_survey` into `colorblind_clean`, which only kept responses that were likely not spam, and `colorblind_spam`, which only kept spam responses. I decided to use 5% as the cutoff for non-spam keeping in line with widely used standards of confidence, and for spam responses I kept obsrvations where the probability was 100% or greater since that seemed most definitive to me, and many of the responses had a spam probability higher than 1. This will exclude a lot of the data. It should be noted that these probabilities are not literal as many of them are greater than 1.
+
+```{r}
+
+colorblind_clean <- colorblind_survey %>% 
+  filter(spam_prob < 0.05 |
+           is.na(spam_prob)) # eliminating spam
+
+colorblind_spam <- colorblind_survey %>% 
+  filter(spam_prob >= 1) # responses considered spam
+
+```
+
+After summarizing `colorblind_spam`, I found that out of 66,418 colorblind user responses, 2,529 could be considered spam responses.
+
+```{r}
+colorblind_spam %>% 
+  group_by(colorblind) %>% 
+  summarise(responses = n()) %>% 
+  gt() %>% 
+  tab_header(title = md("**Total Spam Responses by Colorblindess**"))
+```
+
+I was also curious whether or not colorblind user responses were more or less likely to be spam than non-colorblind users. I explored this with `summarize()` and the `spam_probability` variable, which is supposedly the likeliness that a response is spam (it's unclear how this probability is being calculated).
+
+```{r}
+colorblind_survey %>%
+  group_by(colorblind) %>%
+  summarise(avg_spam_prob = mean(spam_prob, na.rm = TRUE),
+            median_spam_prob = median(spam_prob, na.rm = TRUE),
+            count = n()) %>% 
+  gt() %>% 
+  tab_header(title = md("**Spam Probability by Colorblindess**"))
+```
+
+It seems that colorblind users are more likely to submit spam responses than non-colorblind users, though not by much. Both the average and median spam probability for colorblind users were higher than for non-colorblind users. The average spam probability for colorblind users was almost 25%, and the average for non-colorblind users was 19%. The median probabilities are 10% and 6%, respectively. This means, on average, a colorblind user's response is about 6% more likely to be spam than a non-colorblind user's response. This difference is small, but meaningful, as there are many reasons and factors that could be attributed to it. Perhaps users who are colorblind give up on naming colors more than non-colorblind users, or maybe they get frustrated with the task of naming colors quicker, or maybe they care less about color naming in general. A deeper dive into this could potentially reveal the attitudes that colorblind people have towards the intricacies of color. We could also dive deeper into the gender divide as males are much more likely to be colorblind, and we might draw conclusions about if it's gender or colorblindness that is affecting the spam probability. Another time.
+
+## Non-Spam Colorblind Responses
+
+I then decided to explore the most popular color responses, and whether colorblindness affected the top responses.
+
+```{r}
+colorblind_clean %>% 
+  group_by(response) %>% 
+  summarise(count = n()) %>% 
+  slice_max(order_by = count,
+            n = 5) %>% 
+  gt() %>% 
+  tab_header(title = md("**Top 5 Color Responses**"))
+```
+
+These are the top 5 color responses for the entire `colorblind_clean` set. Do the results change if I look at just colorblind responses? Let's see.
+
+```{r}
+#| fig-alt: A plot displaying the top five rankings of color responses for colorblind users.
+#| 
+colorblind_clean %>% 
+  filter(colorblind == 1) %>% 
+  group_by(colorblind, response) %>% 
+  summarise(count = n()) %>% 
+  slice_max(order_by = count,
+            n = 5) %>% 
+  ungroup() %>% 
+  ggplot(aes(y = count,
+             x = reorder(response, count),
+             fill = response)) +
+  geom_col(show.legend = FALSE, position = "dodge") +
+  labs(x = "Response",
+       y = "Frequency",
+       title = "Top 5 Colorblind Responses",
+       subtitle = "Spam responses are excluded.") +
+  scale_fill_identity() +
+  theme_minimal()
+```
+
+The chart above shows that the top color response for colorblind users is green, while the overall top color response is purple.
+
+##### Response Length
+
+What about the length of responses? Do colorblind users say more or less about color than non-colorblind users?
+
+```{r}
+colorblind_clean %>% 
+  group_by(colorblind) %>% 
+  summarise(avg_response_length = mean(str_length(response))) %>% 
+  gt() %>% 
+  tab_header(title = md("**Average Reponse Length by Colorblindness**"))
+```
+
+According to the data, the average length of a colorblind user's response is around 5-6 characters less than that of a non-colorblind user.
+
+In order to further explore response length as a variable, I decided to add a `response_length` column to `colorblind_clean` using `mutate()`. I then subsetted the set into `long_responses`, which only kept responses longer than the overall average response length.
+
+```{r}
+colorblind_clean <- colorblind_clean %>%
+  mutate(response_length = str_length(response))
+
+mean_length <- mean(colorblind_clean$response_length, na.rm = TRUE)
+
+long_responses <- colorblind_clean %>%
+  filter(response_length > mean_length)       
+  
+```
+
+I then used this subset to create the visualization below of the counts of these long responses. I ran into a lot of issues while creating this plot. The main one was that there were 3 very long responses in the `long_responses` set, with the longest one being almost 2 million characters. This is because somehow (the reason is unclear to me), these responses had thousands of lines of SQL code in them right after the user's actual response. This caused my graph to be completely blank when I first started plotting it. I decided to do a filter removing these 3 outliers, and that was a good working solution.
+
+```{r}
+#| fig-alt: A plot displaying the distribution of responses longer than the mean response length for colorblind users and non-colorblind users. Some long responses (characters in the hundreds of thousands) are excluded.
+
+long_responses2 <- long_responses %>%
+  filter(response_length < 750000 &
+           response_length > 50)
+
+long_responses2 %>% 
+  ggplot(aes(x = response_length,
+             fill = colorblind)) +
+  facet_wrap(~colorblind, 
+             labeller = labeller(colorblind = c(`0` = "Non-Colorblind",
+                                                `1` = "Colorblind"))) +
+   geom_vline(xintercept = mean_length, 
+             linetype = "dashed", 
+             color = "red", 
+             linewidth = .5) +
+  geom_histogram(binwidth = 50) +
+  labs(title = "Distribution of Long Responses by Colorblindess",
+       x = "Response Length",
+       y = "Count") +
+  theme_minimal() + 
+  theme(legend.position = "none")
+```
+
+According to the plot, the distribution of response lengths for colorblind and non-colorblind users seem somewhat proportional to each other, but the longest non-colorblind response is higher than the longest colorblind response by over 200 characters.
+
+## Conclusion
+
+My original question in studying the results of the XKCD color survey asked whether or not colorblindness affected user responses, and how they engaged with the survey. After this brief investigation I think we can definitely argue that colorblindness does indeed have an effect on the survey responses. A lot of my findings matched up with my presuppositions, but some of them were unexpected. The data seems to indicate that colorblind users may be more likely submit spam, but also give shorter, less descriptive responses than non-colorblind users. This seems to make sense considering that colorblind people see less color[^3]. However, the data also seems to suggest that for a majority of the colorblind users, green was the easiest or most common color they identified. There could be many reasons for this, but this was unexpected to me because red-green colorblindness is the most common kind, so I assumed that green would not be one of the top-named colors. But I also don't know if the "greens" being named were actually green, since I focused on user responses rather than hex codes. All that being said, I think the relationship between colorblindness and user responses is pretty interesting!
+
+[^3]: [How do the Colorblind Think and Talk about Color? - We are Colorblind](https://wearecolorblind.com/articles/how-do-the-colorblind-think-and-talk-about-color/)

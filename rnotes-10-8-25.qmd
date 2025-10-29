@@ -1,0 +1,154 @@
+---
+title: "R Notes 10/8 - 10/10"
+author: "Preye Indiamaowei"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+library(dplyr)
+```
+
+First, let's include an image in our document. Make sure `dumpster_fire.jpeg` is in your project folder.
+
+![This is a label for the cool dumpster fire image](dumpster_fire.jpeg)
+
+If you need, you can read about resizing this, etc. The label serves as alt text.
+
+Another very important Quarto thing is footnotes^[like this].
+
+## Project planning
+
+I strongly reccomend a two-step process as you choose your topic.
+
+1) First, generate **lots** of ideas. Don't judge. Write them down. This means making a bunch of plots and numerical summaries, and it also means reading more about the data and about color.
+
+Wait until a different day.
+
+2) Cross off the ones that are too hard or too basic. Decide on your top 3. Start with number 1 and then make some exploratory plots to see if it's actually working.
+
+## Pivoting!
+
+Remember, `pivot_longer` handles when some columns have names that are actually values of an unnamed variable. Let's consider `billboard` as an example.
+
+```{r}
+glimpse(billboard)
+```
+We need to convert the `wk` columns using `pivot_longer`.
+
+```{r}
+billboard_long <- billboard %>% 
+  pivot_longer(cols = wk1:wk76,
+              names_to = "week",
+              values_to = "ranking")
+
+billboard_long %>%
+  arrange(ranking) %>% 
+  head() %>% 
+  gt::gt()
+```
+
+Wishlist:
+
+- So many stupid `NA`s
+
+- The word `week` is repeated in an unhelpful way.
+
+
+```{r}
+billboard_long <- billboard %>% 
+  pivot_longer(cols = starts_with("wk"),
+               names_to = "week",
+               values_to = "rank",
+               values_drop_na = TRUE,
+               names_prefix = "wk",
+               names_transform = as.numeric)
+
+glimpse(billboard_long)
+```
+
+Let's try the plot again:
+
+```{r}
+ggplot(billboard_long, aes(x = week,
+                           y = rank,
+                           color = track)) + 
+  geom_line(show.legend = FALSE) 
+```
+
+I only want to keep songs that charted at least a year. To do this, I'm going to add a column showing the total number of weeks the song charted. 
+
+```{r}
+billboard_long <- billboard_long %>% 
+  group_by(track) %>% 
+  mutate(weeks_charted = max(week)) %>% 
+  filter(weeks_charted >= 52)
+
+glimpse(billboard_long)
+
+ggplot(billboard_long, aes(x = week,
+                           y = rank,
+                           color = track)) + 
+  geom_line(show.legend = TRUE) 
+```
+
+
+```{r}
+billboard_long <- billboard_long %>% 
+  mutate(date = date.entered + 7 * (week - 1))
+
+glimpse(billboard_long)
+
+ggplot(billboard_long, aes(x = date,
+                           y = rank,
+                           color = track)) + 
+  geom_line(show.legend = TRUE) 
+```
+
+## Pivot Wider
+
+Let's look at `table2`. Here, the names of variables are included in the `type` column. The corresponding values are in the count column. There are two rows per
+
+NOTE: `pivot_longer` is for when column names are values of variable. `pivot_wider` is for when values in a column are names of a variable.
+
+```{r}
+table2
+```
+
+To tidy this, we need to let R know 3 things:
+
+- how to identify observations (which columns). For us, `country` and `year`.
+
+- the column names where the variable names are currently housed.
+
+- the column where the variable values are currently housed
+
+```{r}
+table2_wide <- table2 %>% 
+  pivot_wider(id_cols = c(country, year),
+              names_from = type,
+              values_from = count)
+table2_wide
+```
+
+## Combined variables
+
+Sometimes a column includes more than 1 variable. The simplest tool for handling this is `seperate`.
+
+```{r}
+table3
+```
+
+Let's separate this.
+
+```{r}
+table3 %>% 
+  separate(col = rate,
+           into = c("cases", "population"),)
+```
+
+

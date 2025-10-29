@@ -1,0 +1,201 @@
+---
+title: "Color-Blindess and Responses"
+author: "Preye Indiamaowei"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+```
+
+
+```{r}
+color_survey <- read.csv("color_survey.csv")
+```
+
+## Spam
+
+```{r}
+colorblind <- color_survey %>% 
+  filter(!is.na(colorblind)) # removing na's so only definitively colorblind/non-color-blind responses are included
+
+colorblind_clean <- colorblind %>% 
+  filter(spam_prob < 0.05 |
+           is.na(spam_prob)) # eliminating spam
+
+colorblind_spam <- colorblind %>% 
+  filter(spam_prob >= 1) # responses considered spam
+
+```
+
+total colorblind responses
+```{r}
+colorblind %>% 
+  group_by(colorblind) %>% 
+  summarise(count = n())
+```
+
+
+average spam prob
+```{r}
+colorblind %>%
+  group_by(colorblind) %>%
+  summarise(avg_spam_prob = mean(spam_prob, na.rm = TRUE),
+            median_spam_prob = median(spam_prob, na.rm = TRUE),
+            count = n())
+```
+
+
+total spam responses by colorblindness
+```{r}
+colorblind_spam %>% 
+  group_by(colorblind) %>% 
+  summarise(responses = n())
+```
+top 10 spam responses by colorblindness
+```{r}
+colorblind_spam %>% 
+  group_by(colorblind, response) %>% 
+  summarise(count = n()) %>% 
+  slice_max(order_by = count,
+            n = 5)
+```
+
+longest spam responses
+```{r}
+colorblind_spam %>% 
+  group_by(colorblind) %>% 
+  summarise(longest_response_length = max(str_length(response)))
+```
+
+## Response length
+average response length by colorblindness
+```{r}
+colorblind_clean %>% 
+  group_by(colorblind) %>% 
+  summarise(avg_response_length = mean(str_length(response)))
+```
+
+longest responses by colorblindess
+```{r}
+colorblind_clean %>% 
+  group_by(colorblind) %>% 
+  summarise(longest_response_length = max(str_length(response)))
+```
+remove user 9613 and that one up there
+```{r}
+colorblind_clean_sm <- colorblind_clean %>% 
+  arrange(desc(str_length(response))) %>% 
+  filter(str_length(response) < 1706133)
+  
+```
+
+
+top responses by color blindess
+```{r}
+colorblind_clean %>% 
+  group_by(colorblind, response) %>% 
+  summarise(count = n()) %>% 
+  slice_max(order_by = count,
+            n = 5)
+```
+top responses by colorblindess by gender
+```{r}
+colorblind_clean %>% 
+  group_by(y_chromosome, colorblind, response) %>% 
+  summarise(count = n()) %>% 
+  slice_max(order_by = count,
+            n = 5)
+```
+
+## Q's
+Main: How does color-blindess affect responses
+- how many spam responses are from colorblind users
+- are responses less descriptive from colorblind people
+- what kind of spam comes from colorblind people
+
+## Plots
+top five responses not colorblind
+```{r}
+colorblind_clean %>% 
+  filter(colorblind == 0) %>% 
+  group_by(colorblind, response) %>% 
+  summarise(count = n()) %>% 
+  slice_max(order_by = count,
+            n = 5) %>% 
+  ungroup() %>% 
+  ggplot(aes(y = count,
+             x = reorder(response, count),
+             fill = response)) +
+  geom_col(show.legend = FALSE, position = "dodge") +
+  labs(x = "Response",
+       y = "Frequency",
+       title = "Top 5 Non-Color-Blind Responses",
+       subtitle = "Spam responses are excluded.") +
+  theme_minimal()
+```
+```{r}
+colorblind_clean %>% 
+  filter(colorblind == 1) %>% 
+  group_by(colorblind, response) %>% 
+  summarise(count = n()) %>% 
+  slice_max(order_by = count,
+            n = 5) %>% 
+  ungroup() %>% 
+  ggplot(aes(y = count,
+             x = reorder(response, count),
+             fill = response)) +
+  geom_col(show.legend = FALSE, position = "dodge") +
+  labs(x = "Response",
+       y = "Frequency",
+       title = "Top 5 Color-Blind Responses",
+       subtitle = "Spam responses are excluded.") +
+  scale_fill_identity() +
+  theme_minimal()
+```
+
+
+```{r}
+colorblind_clean %>% 
+  filter(colorblind == 1) %>% 
+  group_by(monitor) %>% 
+  summarise(count = n())
+```
+
+
+## Project planning
+
+I strongly recommend a two-step process as you choose your topic.
+
+1) First, generate **lots** of ideas. Don't judge. Write them down. This means making a bunch of plots and numerical summaries, and it also means reading more about the data and about color.
+
+Wait until a different day.
+
+2) Cross off the ones that are too hard or too basic. Decide on your top 3. Start with number 1 and then make some exploratory plots to see if it's actually working.
+
+
+# Project Requirements
+
+
+Each data project is required to include the following elements:
+
+- a central question or theme that is addressed from both the data and the human perspective. Projects consisting of only code and outputs will receive poor marks, no matter how valid. All elements of the project should support this topic in a meaningful way.
+
+- approximately 400 words of text. Very little of this should be about your coding process (data import, cleaning, etc). Rather, you should strive to say something interesting about colors and color perception while referencing the variables in this data set. While this could be technical, it could also be psychological, historical, cultural, or economic in nature.
+
+- to this end, you must include at least two citations beyond the sources listed here. Do this using footnotes1. Web sources such as Wikipedia are acceptable, but you should consider their reliability as part of your discussion, if applicable.
+
+- at least two meaningful, interesting, and attractive visualizations. These should be accessible (colorblind friendly with alt-text). Remember, each visualization should address a single specific question about the data.
+
+- at least one meaningful, interesting, and attractive numerical summary. Typically, this is accomplished with `group_by` and `summarize` and displayed using `gt`.
+
+- at least one area in which the project shows personal excellence and growth beyond the basic tools learned in class. This could mean a particularly intricate visualization, a deeper historical or cultural analysis, a harder data wrangling task, or a new (appropriate) mathematical idea.
+
+**A few additional points to keep in mind:**
+
+
+- this is an *exploratory* project, not an inferential one. The job of the former is to generate hypotheses, the later to test them. You should resist the urge to try to model the data at this point.

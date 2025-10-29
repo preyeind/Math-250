@@ -1,0 +1,148 @@
+---
+title: "R Notes 9/15/25"
+author: "Preye Indiamaowei"
+format: html
+embed-resources: true
+---
+
+
+
+Today we'll be using scooby.
+
+
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+library(readxl)
+
+scooby <- read_excel("scooby.xlsx")
+```
+
+
+
+This set has a lot of columns.
+
+
+
+```{r}
+ncol(scooby)
+```
+
+
+
+We can choose to keep only some of these columns using `select`. Let's just keep the first 5. All of these commands do the same thing:
+
+
+
+```{r}
+scooby_sm <- select(scooby,
+                    series_name,
+                    network,
+                    season,
+                    title,
+                    imdb)
+scooby_sm <- select(scooby,
+                    1:5)
+scooby_sm <- select(scooby,
+                    series_name: imdb)
+
+glimpse(scooby_sm)
+```
+
+```{r}
+scooby_sm <- select(scooby,
+                    imdb, #imdb first
+                    series_name,
+                    network,
+                    season,
+                    title,)
+
+glimpse(scooby_sm)
+
+scooby_sm <- select(scooby,
+                    -velma_va) #remove a column
+ncol(scooby_sm)
+
+scooby_reordered <- select(scooby,#title and velma 1st
+                           title,
+                           velma_va,
+                           everything())
+glimpse(scooby_reordered)
+
+```
+
+
+
+Also useful are `starts_with`, `ends_with`, and `contains`.
+
+
+
+```{r}
+scooby_sm <- select(scooby,
+                    title,
+                    network,
+                    imdb,
+                    contains("velma"))
+
+glimpse(scooby_sm)
+```
+
+
+## The pipe
+
+Two observations:
+
+- We often nned to do more than one thing to a data set, for instance, combining `select` and `filter`.
+
+- Both of these functions (and many others) take a data set as their primary input and give back another data set.
+
+Two non-optimal ideas:
+
+
+
+```{r}
+scooby_sm <- select(scooby,
+                    title,
+                    network,
+                    imdb)
+
+scooby_smaller <- filter(scooby_sm,
+                         network == "CBS")
+
+glimpse(scooby_smaller)
+```
+
+
+I don't like having that intermediate `scooby_sm`.
+
+
+
+```{r}
+scooby_smaller <- filter(select(scooby,
+                                title,
+                                network,
+                                imdb),
+                         network == "CBS") #same thing
+
+glimpse(scooby_smaller)
+```
+
+
+This isn't great either. R provides a solution: the pipe! Here's the above code written with a pipe.
+
+
+
+```{r}
+scooby %>%
+  select(title,
+         network,
+         imdb) %>%
+  filter(network == "CBS")
+```
+
+
+
+The pipe takes the object on the left and passes it to the function on the right as the first argument.

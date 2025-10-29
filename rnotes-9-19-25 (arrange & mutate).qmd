@@ -1,0 +1,73 @@
+---
+title: "R Notes 9/19/25"
+author: "Preye Indiamaowei"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+library(modeldata)
+
+```
+
+Prof Gard's Plot
+```{r}
+#| warning: false
+
+ggplot(scat, aes(y = Species,
+                 x = d15N,
+                 fill = Species)) +
+  geom_boxplot(outlier.shape = NA,
+               show.legend = FALSE) +
+  
+  
+
+```
+There are two missing values which I haven't explored.
+
+## Arranging a data set by a variable
+
+Let's arrange scat by `d15N`.
+
+```{r}
+scat %>%
+  select(Species, 
+         Site, 
+         d15N) %>% 
+  arrange(desc(d15N)) %>% 
+  head() # show just the first few rows
+```
+
+We can arrange by multiple variables, including categorical ones.
+
+```{r}
+scat %>%
+  select(Species, 
+         Site, 
+         d15N,
+         Location) %>% 
+  arrange(Location, d15N) %>% 
+  print(n = 110)
+```
+
+# Adding/modifying columns
+
+Use the `mutate` command. Let's get the ratio of `diameter` to `length` in the `scat` set.
+
+```{r}
+scat %>% 
+  select(Species, 
+         Diameter,
+         Length) %>% 
+  mutate(Shape = Diameter / Length) %>% 
+  head()
+```
+
+We can also use this command to change an existing column.
+
+Last comment: `arrange` always gives back a set with the same dimentions as the original. `mutate` always has the same number of rows but psiibly have more columns. `filter`has the same number of columns, and `select` has the same number of rows.
+

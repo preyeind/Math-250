@@ -1,0 +1,143 @@
+---
+title: "Scat Data Exploration"
+author: "Preye Indiamaowei"
+date: "17 September 2025"
+format: html
+embed-resources: true
+---
+
+Today we will be looking at the `scat` data set from the `modeldata` package and drawing some conclusions from it. Let's take a look at the data set.
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+library(modeldata)
+
+glimpse(scat)
+
+```
+
+```{r}
+#| include: false
+
+ggplot(scat, aes(x = Length,
+                 y = Mass,
+                 color = Species)) +
+  geom_point()
+```
+
+Scat mass is more than 10.
+
+```{r}
+#| message: false
+
+scat_small <- scat %>%
+                filter(Mass > 10)
+
+ggplot(scat_small, aes(x = Mass, 
+                       fill = Species)) +
+  geom_histogram() +
+  facet_wrap(~Species) +
+  labs(x = "Scat Length",
+       y = "Scat Mass",
+       title = "Scat Size by Species") +
+  theme_minimal()
+```
+
+Scat mass is less than 10.
+
+```{r}
+#| include: false
+
+scat_small <- scat %>%
+                filter(Mass < 10)
+
+ggplot(scat_small, aes(x = Length,
+                 y = Mass,
+                 color = Species)) +
+  geom_point() +
+  facet_wrap(~Species) +
+  labs(x = "Scat Length",
+       y = "Scat Mass",
+       title = "Scat Size by Species") +
+  theme_minimal()
+```
+
+Scat Mass and Age
+
+```{r}
+
+ggplot(scat, aes(x = Age,
+                 y = Mass,
+                 color = Species)) +
+  geom_point() +
+  facet_wrap(~Species) +
+  labs(x = "Age",
+       y = "Scat Mass",
+       title = "Scat Size by Age") +
+  theme_minimal()
+```
+
+```{r}
+#| include: false
+
+ggplot(scat, aes(x = Taper,
+                 y = Mass,
+                 color = Species)) +
+  geom_point() +
+  facet_wrap(~Species) +
+  theme_minimal()
+```
+
+```{r}
+
+#| include: false
+
+
+ggplot(scat, aes(x = Length,
+                 y = Mass,
+                 color = Species)) +
+  geom_point() +
+  facet_wrap(~Species) +
+  facet_wrap(~Location) +
+  theme_minimal()
+```
+
+```{r}
+
+#| include: false
+
+
+ggplot(scat, aes(x = Length,
+                 y = Mass,
+                 color = Species)) +
+  geom_point() +
+  facet_wrap(~Species) +
+  facet_wrap(~Site) +
+  theme_minimal()
+```
+
+```{r}
+
+#| message: false
+
+ggplot(scat, aes(x = Mass,
+                 fill = Species)) +
+  geom_histogram() +
+  facet_wrap(~Species) +
+  theme_minimal()
+```
+
+```{r}
+
+#| message: false
+
+
+ggplot(scat, aes(x = Site,
+                 fill = Species)) +
+  geom_bar() +
+  facet_wrap(~Species) +
+  theme_minimal()
+```

@@ -1,0 +1,173 @@
+---
+title: "Exam 1"
+author: "Preye Indiamaowei"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+library(gt)
+library(readxl)
+coffee <- read_excel("coffee.xlsx")
+```
+
+# Problem 1
+**Write a short paragraph (approx 3-5 sentences) with background information on this data set. Who collected it and how did it come to be in its present form? What can you tell me that isn’t obvious from a quick glance at the Tidy Tuesday Github? You should NOT need to include any code for this part.**
+
+Problems 1 - 6 on this exam use the `coffee` data set. This set contains information about different batches of coffee beans and their ratings. Each observation in the data set is a different batch of beans. The data was collected by James LeDoux from the Coffee Quality Institute's review pages in January 2018, and was distributed through R for a TidyTuesday project. There are 44 variables in the set. Variables in this set include but are not limited to:
+
+* Data about quality, such  (`aroma`, `flavor`, `body`, `aftertase`, defects etc)
+* Data about the farms where beans were grown (`farm_name`, `mill`, `lot_number`, etc)
+* Metadata about the beans (`species`, `color`, `processing_method`, etc)
+
+# Problem 2
+**This data set includes one very obvious outlier in the flavor variable. Identify this observation, remove it from the set, then create an attractive plot showing the distribution of flavor ratings in this set. Why was removing the outlier a good idea here?** 
+
+**Save the resulting data frame as coffee2 and use it for all future problems. **
+
+Upon examining the data set, I found that there was one observation in which the flavor rating was 0. After removing this observation from the data set, we can see that coffee flavor ratings have a normal distribution. I've also created a plot displaying the distribution with the outlier included, and we can see that when the outlier is included, it skews the distribution. Removing this outlier is a good idea because we can reasonably assume that this observation having a flavor rating of 0 likely means that flavor rating was not collected in this case-- so removing it makes for a more accurate distribution and data set overall.
+
+```{r}
+#| fig-alt: A plot displaying the distribution of coffee flavor ratings.
+
+coffee2 <- coffee %>% 
+  filter(flavor > 0)
+
+coffee2 %>% 
+  ggplot(aes(x = flavor)) +
+  geom_density() +
+  labs(x = "Coffee Flavor Rating",
+       y = "Rating Distribution",
+       title = "Distribution of Coffee Flavor Ratings") +
+  theme_minimal() 
+```
+```{r}
+#| fig-alt: A plot displaying the distribution of coffee flavor ratings with outliers included.
+
+coffee %>% 
+  ggplot(aes(x = flavor)) +
+  geom_density() +
+  labs(x = "Coffee Flavor Rating",
+       y = "Rating Distribution",
+       title = "Distribution of Coffee Flavor Ratings") +
+  theme_minimal() 
+```
+
+
+# Problem 3
+Obtain a smaller data set that includes only the variables farm_name, country_of_origin, color, flavor, and all those with the word “number” in their name. Remove observations with fewer than 300 bags tested and keep only those are not green in color. Order the results by highest flavor rating. If there are ties, order these reverse-alphabetically. Glimpse your results.
+```{r}
+coffee_sm <- coffee2 %>% 
+  select(country_of_origin,
+         farm_name,
+         lot_number,
+         ico_number,
+         number_of_bags,
+         flavor,
+         color) %>% 
+  filter(number_of_bags >= 300,
+         color != "Green") %>% 
+  arrange(-flavor,
+          desc(farm_name))
+
+glimpse(coffee_sm)
+```
+# Problem 4
+
+```{r}
+#| fig-alt: A boxplot comparing coffee flavor ratings based on whether the coffee variety information is missing.
+
+coffee2 %>% 
+  ggplot(aes(y = is.na(variety),
+             x = flavor,
+             fill = is.na(variety))) +
+  geom_boxplot(show.legend = FALSE) +
+  labs(x = "Variety Missing",
+       y = "Flavor Rating",
+       title = "Does mystery coffee taste better?",
+       caption = "Source: Tidy Tuesday 2020-07-07") +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Dark2")
+```
+
+# Problem 5
+**Obtain a table showing the five most common countries of origin in coffee2. Include their average flavor ratings as well as their frequencies. Add a reasonable title to your table (you’ll need to learn how to do this).**
+```{r}
+coffee2 %>% 
+  group_by(country_of_origin) %>% 
+  summarise(avg_flav_rating = mean(flavor), frequency = n()) %>% 
+  slice_max(order_by = frequency, 
+            n = 5) %>% 
+  gt() %>% 
+  tab_header(title = "Top 5 Producers of Coffee") %>% 
+  tab_options(table.font.color = "brown")
+```
+
+
+# Problem 6
+**Obtain an attractive and informative plot showing the popularity of the various processing methods used in the countries identified in the last problem. Are there any apparent difference between nations here?**
+
+**Note: you do not need to deeply research the missing values in the processing_method variable, but you should make an intelligent choice about how to treat them in your plot. Write a very short explanation of your choice.**
+```{r}
+#| fig-alt: A plot displaying the relative popularity of different coffee processing methods in the top 5 producer countries of coffee.
+
+coffee_top5country <- coffee2 %>% 
+  mutate(missing_processing_method = is.na(processing_method)) %>% 
+  filter(country_of_origin == "Mexico" |
+           country_of_origin == "Colombia" |
+           country_of_origin == "Guatemala" |
+           country_of_origin == "Brazil" |
+           country_of_origin == "Taiwan")
+          # without NA values
+         # ,is.na(processing_method) == FALSE) 
+
+coffee_top5country %>% 
+  ggplot(aes(y = processing_method,
+             fill = country_of_origin)) +
+  facet_wrap(~country_of_origin) +
+  geom_bar(position = "dodge", show.legend = FALSE) +
+  labs(x = "Frequency",
+       y = "Processing Method",
+       title = "Processing Methods by Country") +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Dark2")
+```
+According to the plot, washed/wet processing methods seem to be the most popular amongst the countries. The only country here where washed/wet processing methods are are the most popular is Brazil. In Brazil, natural/dry methods seem to be the most popular, and semi-washed/semi-pulped is the second most popular.
+
+To deal with the issue of the `NA`s in the `processing_method` variable, I experimented with making a plot that included the `NA` values and one that did not. After doing this, I observed that for most of the countries, excluding Colombia, the amount of `NA`s was small. Colombia, however, had almost 50 `NA` values, which would account for around 20% of their observations. Because of that I decided to keep `NA` values in the plot because that seems important.
+
+# Problem 7
+
+The following problem deals with the `gss` data set, which includes partial information from the General Social Survey, 2000-2014.
+```{r}
+gss <- read.csv("gss.csv")
+```
+
+```{r}
+gss <- gss %>% 
+  mutate("avg_tv_hrs" = mean(tvhours, na.rm = TRUE))
+
+```
+
+
+
+```{r}
+#| fig-alt: A plot showing average tv hours per day over time for different marital statuses. 
+
+gss %>% 
+  ggplot(aes(x = year, 
+             y = avg_tv_hrs,
+             color = marital)) +
+  geom_point() +
+  geom_line() +
+  scale_color_brewer(palette = "Dark2") +
+  labs(x = "Year of Survey",
+       y = "Average TV per day (hours)") +
+  theme_minimal()
+```
+
+There is an error with this plot-- instead of showing averages for each year, for each marital status, it is plotting one mean value for all the data. I tried to fix it but I was unsuccessful. 

@@ -1,0 +1,71 @@
+---
+title: "R Notes 9/22/25"
+author: "Preye Indiamaowei"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+library(dplyr)
+
+```
+
+## More on `mutate` 
+
+```{r}
+glimpse(penguins)
+
+```
+
+Let's convert the bill measurements from mm to in. Let's also make `species` and `island` all lowercase.
+
+```{r}
+penguins_murica <- penguins %>% 
+  mutate("bill_len_in" = bill_len * 0.03937008,
+         "bill_dep_in" = bill_dep * 0.03937008,
+         species = tolower(species),
+         island = tolower(island))
+
+glimpse(penguins_murica)
+```
+
+## Grouped Summaries
+
+To start, check out the `summarize` verb.
+
+```{r}
+penguins %>% 
+  summarize(bill_len_avg = mean(bill_len,
+                 na.rm = TRUE),
+            bill_len_sd = sd(bill_len,
+                             na.rm = TRUE))
+
+```
+
+I'd really like this for each different species. There are 2 main ways to do this. The most direct is the `.by` argument. 
+
+```{r}
+penguins %>% 
+  summarize(bill_len_avg = mean(bill_len,
+                                na.rm = TRUE),
+            bill_len_sd = sd(bill_len,
+                             na.rm = TRUE),
+            .by = species)
+
+```
+
+The older way is technically better, but less elegant:
+
+```{r}
+penguins %>% 
+  group_by(species) %>% 
+  summarize(bill_len_avg = mean(bill_len,
+                                na.rm = TRUE),
+            bill_len_sd = sd(bill_len,
+                             na.rm = TRUE))
+
+```

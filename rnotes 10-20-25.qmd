@@ -1,0 +1,82 @@
+---
+title: "R notes 10/20"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+library(gt)
+
+msleep1 <- data.frame(name = c("Cheetah", 
+                               "Dog"),
+                      genus = c("Acinonyx",
+                                "Canis"))
+msleep2 <- data.frame(name = c("Cow",
+                               "Goat"),
+                      genus = c("Bos",
+                                "Capri"))
+msleep_vore <- data.frame(name = c("Cheetah", 
+                                   "Cow",
+                                   "Goat",
+                                   "Brown bat"),
+                          vore = c("carni",
+                                   "herbi",
+                                   "herbi",
+                                   "insecti"))
+```
+
+## Combining sets: new observations, same variables
+
+```{r}
+msleep1
+msleep2
+```
+
+Here the variable names match up. All we need to do is copy/paste.
+
+```{r}
+msleep1 %>% 
+  bind_rows(msleep2)
+```
+
+Check out the help file with `?bind_rows`.
+
+```{r}
+msleep_genus <- msleep1 %>% 
+  bind_rows(msleep2,
+            .id = "Researcher")
+msleep_genus
+```
+
+## Combining sets: different variables
+
+I'd like to add `vore` informaion to `msleep_genus`. We do this with `left_join`.
+
+```{r}
+msleep_genus %>% 
+  left_join(msleep_vore,
+            by = "name")
+```
+
+Order matters!
+```{r}
+msleep_vore %>% 
+  left_join(msleep_genus,
+            by = "name")
+```
+If you leave put `by`, then R will join by all the matching columns. This is called a *natural join*. 
+
+```{r}
+msleep_vore %>% 
+  left_join(msleep_genus)
+```
+
+Prof Gard does not reccomend this. It can go wrong in a million different ways.
+
+## Filtering Joins
+
+We can also use a second data set to filter our set, for instance, only keeping observations that also appear in the second set (`semi_join`) or that don't appear in the second (`anti-join`).

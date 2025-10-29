@@ -1,0 +1,147 @@
+---
+title: "Pivoting Practice"
+author: "Preye Indiamaowei"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+#| echo: false
+
+library(tidyverse)
+library(readxl)
+```
+
+## Problem 1
+Consider the airport_data_speeds set, available on Moodle, which is adapted from Triola’s Elementary Statistics1.
+
+Tidy the data and then recreate the following plot as closely as possible.
+
+```{r}
+airport_data_speeds <- read_excel("airport_data_speeds.xlsx")
+
+airport_data_speeds %>% 
+  head(n = 10) %>% 
+  gt::gt()
+```
+```{r}
+#| fig-alt: A plot showing the range of speeds for each carrier. 
+
+airport_data_speeds_long <- airport_data_speeds %>%
+  pivot_longer(cols = VERIZON:`T-MOBILE`,
+                                    names_to = "carrier",
+                                    values_to = "speed")
+airport_data_speeds_long %>% 
+  head(n = 10) %>% 
+  gt::gt()
+
+airport_data_speeds_long %>% 
+  ggplot(aes(y = carrier,
+             x = speed,
+             fill = carrier)) +
+  geom_boxplot(show.legend = FALSE) +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Dark2")
+```
+
+
+
+
+## Problem 2
+Continue to use your tidied airport_data_speeds set. In how many of the airports in this set was Verizon the fastest? Answer this question using group_by.
+```{r}
+#| message: false
+
+airport_carrier_speed <- airport_data_speeds_long %>%
+  group_by(`AIRPORT CODE`) %>%
+  filter(speed == max(speed)) %>% 
+  ungroup() %>% 
+  count(carrier)
+  
+gt::gt(airport_carrier_speed)
+
+
+```
+Verizon had the fastest speed in 21 airports.
+
+## Problem 3
+This problem uses the `drinks` data set, included in the `fivethirtyeight` package. Tidy the data set and recreate the plot. 
+
+```{r}
+#| message: false
+
+library(fivethirtyeight)
+
+drinks %>% 
+  head(n = 10) %>% 
+  gt::gt()
+
+drinks_long <- drinks %>%
+  rename(Beer = beer_servings,
+         Wine = wine_servings,
+         Spirits = spirit_servings) %>%
+  pivot_longer(cols = Beer:Wine,
+               names_to = "alc_type",
+               values_to = "servings")
+drinks_long %>% 
+  head(n = 10) %>% 
+  gt::gt()
+```
+
+
+```{r}
+#| fig-alt: A plot displaying the serving amounts of beer, wine, and spirits for China, the U.S, Italy, and Saudi Arabia.
+
+drinks_long %>%
+  filter(country == "China" |
+           country == "USA" |
+           country == "Saudi Arabia" |
+           country == "Italy") %>% 
+  ggplot(aes(x = country,
+             y = servings,
+             fill = alc_type)) +
+  geom_col(position = "dodge") +
+  labs(x = "Country",
+       y = "Servings",
+       fill = "Alcohol Type",
+       title = "What'll you have?") +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Dark2")
+```
+
+
+
+
+
+## Problem 4
+This problem uses the `teeth` data set. This 2004 set shows the annual sugar consumption in 90 countries as well as the mean number of decayed, missing, and filled teeth (DMFT) of residents at the age of 122.
+
+Write code to tidy this data so that each column represents a single variable and each row a single observation (country). Use that result to recreate the following plot as closely as possible.
+
+```{r}
+teeth <- read_excel("teeth.xlsx")
+
+teeth_wide <- teeth %>% 
+  pivot_wider(id_cols = c(Country),
+              names_from = Quantity,
+              values_from = Amount)
+
+teeth_wide %>%
+  head(n = 10) %>% 
+  gt::gt()
+```
+
+```{r}
+#| fig-alt: A plot displaying the relationship between annual sugar consumption and quantity of decayed, missing, and filled teeth.
+
+teeth_wide %>% 
+  ggplot(aes(x = Sugar,
+             y = DMFT)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  geom_jitter() +
+  labs(title = "Tidy Toothday") +
+  theme_minimal()
+```
+
