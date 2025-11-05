@@ -1,0 +1,75 @@
+---
+title: "Inference, Etc"
+author: "Preye Indiamaowei"
+format: html
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+```
+
+## Problem 1
+The first two problems in this set refer to the ISLR2::Carseats set, which includes simulated sample data for 400 stores selling a particular brand of child carseat. We view this data as a simple random sample from a larger population.
+
+Does this data provide evidence against the company’s claim that the average price of their own seats is $110? Follow all best practices from class, including hypotheses, a relevant visualization, and a conclusion in non-technical language.
+
+```{r}
+library(ISLR2)
+glimpse(Carseats)
+```
+
+```{r}
+avg_price = mean(Carseats$Price, na.rm = TRUE)
+```
+The mean price according to this data is $115.80.
+
+```{r}
+Carseats %>% 
+  ggplot(aes(x = Price)) +
+  geom_histogram() +
+  geom_vline(xintercept = 110)
+```
+Null hypothesis: 110 ($H_0 : \mu = 110 $)
+
+Alternative hypothesis: mu isn't 110
+$(H_a : \mu \ne 110)$
+
+```{r}
+t.test(Carseats$Price,
+mu = 110)
+```
+the p-value of 0.000001429 means that data like ours will only occur .00001429% of the time when we gather samples of this size. The null hypothesis does not seem to be compatible with the data. We have good evidence against $H_0$, so we reject it and can conclude $\mu \ne 110$.
+
+We can conclude the average price of this company's car seats is not $110.
+
+
+## Problem 2
+Compute a level 90% confidence interval for the mean competitor price in the population from which this sample is drawn. What is the sample mean? What is the margin of error?
+```{r}
+
+```
+
+
+## Problem 3
+Watch my video on contingency tables. Use these tools to create a table with counts of penguin species and home islands in the penguins set. Include marginal counts in your table.
+```{r}
+glimpse(penguins)
+```
+```{r}
+# species, island
+penguins_table <- table(penguins$species, penguins$island)
+
+addmargins(penguins_table)
+
+penguins_table
+```
+
+
+## Problem 4
+Push your solutions to this set to your GitHub page, including both the Quarto source and the rendered html. Use file names of the form, “math250_nov5_yourname.”
+
+Provide a clickable link to the repository on your personal GitHub where these files can be found.
